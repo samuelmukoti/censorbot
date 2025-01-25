@@ -1,0 +1,13 @@
+faster-whisper==0.9.0
+torch==2.1.0
+numpy>=1.24.0
+pysrt>=1.1.2
+subliminal==2.1.0
+ffmpeg-python>=0.2.0
+chardet>=5.0.0
+tqdm>=4.65.0
+python-opensubtitles==0.6.dev0
+babelfish>=0.6.0
+requests>=2.31.0
+guessit>=3.7.1
+click>=8.0.0 
