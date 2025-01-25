@@ -2,6 +2,9 @@
 
 A powerful Python-based tool for automatically censoring profanity in video files. CensorBot uses a multi-stage approach to detect and censor inappropriate language, prioritizing accuracy and performance.
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-donate-yellow.svg)](https://www.buymeacoffee.com/yourusername)
+
 ## Features
 
 ### Core Functionality
@@ -181,19 +184,56 @@ For multiple videos:
 - `CUDA out of memory`: Reduce model size or batch size
 - `CoreML error`: Check macOS version and permissions
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
+## Support the Project
+
+If you find this tool useful, consider buying me a coffee! Your support helps maintain and improve the project.
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/yourusername)
 
 ## Acknowledgments
 
-- OpenAI's Whisper for transcription
-- FFmpeg for audio processing
-- OpenSubtitles for subtitle database
-- Subliminal for subtitle downloading
-- Apple's CoreML for M1/M2 acceleration
-- NVIDIA CUDA for GPU acceleration 
+This project stands on the shoulders of giants. We'd like to acknowledge the following projects and their contributors:
+
+### Core Technologies
+- [OpenAI Whisper](https://github.com/openai/whisper) - The foundation of our speech recognition capabilities
+- [Faster Whisper](https://github.com/guillaumekln/faster-whisper) - CTranslate2-based Whisper implementation
+- [FFmpeg](https://ffmpeg.org/) - The backbone of our audio/video processing
+- [PyTorch](https://pytorch.org/) - Deep learning framework powering Whisper
+
+### Subtitle Processing
+- [Subliminal](https://github.com/Diaoul/subliminal) - Subtitle downloading and processing
+- [OpenSubtitles](https://www.opensubtitles.org/) - Subtitle database and API
+- [pysrt](https://github.com/byroot/pysrt) - SRT subtitle parsing and manipulation
+
+### Machine Learning Acceleration
+- [NVIDIA CUDA](https://developer.nvidia.com/cuda-toolkit) - GPU acceleration for NVIDIA hardware
+- [Apple CoreML](https://developer.apple.com/documentation/coreml) - Neural Engine acceleration for Apple Silicon
+
+### Python Libraries
+- [tqdm](https://github.com/tqdm/tqdm) - Progress bar functionality
+- [chardet](https://github.com/chardet/chardet) - Character encoding detection
+- [ffmpeg-python](https://github.com/kkroening/ffmpeg-python) - Python bindings for FFmpeg
+- [babelfish](https://github.com/Diaoul/babelfish) - Language code handling
+
+### Docker Support
+- [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-docker) - GPU support in containers
+- [Docker Buildx](https://github.com/docker/buildx) - Multi-platform build support
+
+### Inspiration
+- [CleanVid](https://github.com/clean-vid) - Inspiration for subtitle-based censoring approach
+- [profanity-filter](https://github.com/rominf/profanity-filter) - Profanity detection techniques
+
+Special thanks to all the maintainers and contributors of these projects who make open source amazing!
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+Please make sure to update tests as appropriate and follow the existing code style.
+
+---
+Made with ❤️ by [https://buymeacoffee.com/smukoti] 

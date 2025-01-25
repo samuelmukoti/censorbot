@@ -28,16 +28,20 @@ RUN apt-get update && apt-get install -y \
 # Upgrade pip
 RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# Set working directory
-WORKDIR /app
+# Set working directory to where files will be processed
+WORKDIR /workdir
+
+# Copy application code first (less likely to change)
+COPY censor.py /app/
+RUN chmod +x /app/censor.py
 
 # Copy requirements and install Python dependencies
-COPY requirements.txt .
+COPY requirements.txt /app/
 
 # Install platform-specific dependencies
 FROM base AS apple_silicon
 RUN pip3 install --no-cache-dir torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r /app/requirements.txt
 RUN pip3 install --no-cache-dir coremltools
 
 FROM base AS nvidia
@@ -45,7 +49,7 @@ COPY --from=cuda_base /usr/local/cuda/ /usr/local/cuda/
 ENV PATH=/usr/local/cuda/bin:${PATH}
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:/usr/local/lib
 RUN pip3 install --no-cache-dir torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r /app/requirements.txt
 
 # Final stage
 FROM base AS final
@@ -58,13 +62,16 @@ COPY --from=apple_silicon /usr/local/lib/python3.*/site-packages/ /usr/local/lib
 COPY --from=nvidia /usr/local/lib/python3.*/site-packages/ /usr/local/lib/python3/site-packages/
 COPY --from=nvidia /usr/local/cuda/ /usr/local/cuda/
 
-# Copy application code
-COPY censor.py .
-
-# Make the script executable
-RUN chmod +x censor.py
-
 # Create cache directory for subliminal
 RUN mkdir -p /root/.cache/subliminal
 
-ENTRYPOINT ["python3", "censor.py"] 
+# Install base requirements again in final stage
+RUN pip3 install --no-cache-dir -r /app/requirements.txt
+
+# Make sure censor.py exists and is executable
+RUN ls -la /app/censor.py && chmod +x /app/censor.py
+
+# Set the working directory to where files will be processed
+WORKDIR /workdir
+
+ENTRYPOINT ["python3", "/app/censor.py"] 

@@ -23,6 +23,8 @@ wheels/
 .coverage
 htmlcov/
 
+cachefile.*
+
 # Virtual Environment
 .env
 .venv
