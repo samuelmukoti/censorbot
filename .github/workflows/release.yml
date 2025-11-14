@@ -88,9 +88,17 @@ jobs:
     runs-on: ubuntu-latest
     needs: [pypi-publish, docker-publish]
     if: github.event_name == 'release'
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Update release notes
         uses: actions/github-script@v7
@@ -102,9 +110,10 @@ jobs:
               release_id: context.payload.release.id
             });
 
+            const version = '${{ steps.version.outputs.version }}';
             const newBody = release.data.body + `\n\n## Installation\n\n` +
-              `### Via Pip\n\`\`\`bash\npip install censorbot==${{ needs.pypi-publish.outputs.version }}\n\`\`\`\n\n` +
-              `### Via Docker\n\`\`\`bash\ndocker pull ${{ secrets.DOCKERHUB_USERNAME }}/censorbot:${{ needs.pypi-publish.outputs.version }}\n\`\`\``;
+              `### Via Pip\n\`\`\`bash\npip install censorbot==${version}\n\`\`\`\n\n` +
+              `### Via Docker\n\`\`\`bash\ndocker pull ${{ secrets.DOCKERHUB_USERNAME }}/censorbot:${version}\n\`\`\``;
 
             await github.rest.repos.updateRelease({
               owner: context.repo.owner,
