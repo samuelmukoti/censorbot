@@ -1,13 +1,27 @@
-faster-whisper==0.9.0
-torch==2.1.0
+# Core Whisper backends
+faster-whisper>=1.0.0
+mlx-whisper>=0.4.0; platform_machine == "arm64" and sys_platform == "darwin"
+
+# PyTorch (platform-specific, install separately in Dockerfile)
+# torch>=2.2.0
+
+# NumPy (compatibility constraint for faster-whisper)
 numpy>=1.24.0,<2.0.0
+
+# Subtitle processing
 pysrt>=1.1.2
 subliminal==2.1.0
+babelfish>=0.6.0
+
+# FFmpeg Python bindings
 ffmpeg-python>=0.2.0
+
+# Utilities
 chardet>=5.0.0
 tqdm>=4.65.0
-python-opensubtitles==0.6.dev0
-babelfish>=0.6.0
 requests>=2.31.0
 guessit>=3.7.1
-click>=8.0.0 
+click>=8.0.0
+
+# For OpenSubtitles API
+python-opensubtitles==0.6.dev0 
