@@ -130,7 +130,7 @@ RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
 
 # Copy application code
 COPY censor.py /app/
-COPY badwords.txt /app/ 2>/dev/null || true
+COPY badwords.txt /app/
 RUN chmod +x /app/censor.py
 
 # Create output directory
