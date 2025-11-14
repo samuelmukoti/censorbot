@@ -9,7 +9,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="censorbot",
-    version="0.0.5",
+    version="0.0.6",
     author="Samuel Mukoti",
     author_email="contact@samuelmukoti.com",
     description="Automatically censor profanity in video files using AI transcription",
@@ -39,6 +39,7 @@ setup(
     ],
     python_requires=">=3.8",
     install_requires=[
+        "torch>=2.0.0",  # Required for CPU/GPU detection and platform support
         "faster-whisper>=1.0.0",
         "numpy>=1.24.0,<2.0.0",
         "pysrt>=1.1.2",

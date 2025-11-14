@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "censorbot"
-version = "0.0.5"
+version = "0.0.6"
 description = "Automatically censor profanity in video files using AI transcription"
 readme = "README.md"
 authors = [
@@ -26,6 +26,7 @@ classifiers = [
 keywords = ["video", "censoring", "profanity", "subtitles", "whisper", "ai", "transcription"]
 requires-python = ">=3.8"
 dependencies = [
+    "torch>=2.0.0",  # Required for CPU/GPU detection and platform support
     "faster-whisper>=1.0.0",
     "numpy>=1.24.0,<2.0.0",
     "pysrt>=1.1.2",
