@@ -225,7 +225,7 @@ Expected transcription times (base model):
 
 ## Example Results
 
-**Test case: Deadpool 2 (2018) Bluray 1080p**
+**Test case:  1080p Blu-Ray movie**
 - **File size**: 2.6GB
 - **Duration**: 2:13:59
 - **Processing time**: ~42 minutes (Apple Silicon M-series, CPU fallback)
