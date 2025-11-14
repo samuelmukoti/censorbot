@@ -34,6 +34,8 @@ jobs:
   test-docker:
     name: Test Docker Build
     runs-on: ${{ matrix.os }}
+    # Only run Docker builds on PRs and releases to save CI/CD credits
+    if: github.event_name == 'pull_request' || github.event_name == 'release'
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -86,8 +88,14 @@ jobs:
     steps:
       - name: Check build status
         run: |
+          # Docker test may be skipped on push events (only runs on PR/release)
+          docker_ok=true
+          if [ "${{ needs.test-docker.result }}" != "skipped" ] && [ "${{ needs.test-docker.result }}" != "success" ]; then
+            docker_ok=false
+          fi
+
           if [ "${{ needs.lint.result }}" = "success" ] && \
-             [ "${{ needs.test-docker.result }}" = "success" ] && \
+             [ "$docker_ok" = "true" ] && \
              [ "${{ needs.security-scan.result }}" = "success" ]; then
             echo "✅ All checks passed!"
             exit 0
