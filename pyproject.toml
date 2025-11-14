@@ -1,0 +1,86 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "censorbot"
+version = "0.0.1"
+description = "Automatically censor profanity in video files using AI transcription"
+readme = "README.md"
+authors = [
+    {name = "Samuel Mukoti", email = "contact@samuelmukoti.com"}
+]
+license = {text = "GPL-3.0"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "Topic :: Multimedia :: Video",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+keywords = ["video", "censoring", "profanity", "subtitles", "whisper", "ai", "transcription"]
+requires-python = ">=3.8"
+dependencies = [
+    "faster-whisper>=1.0.0",
+    "numpy>=1.24.0,<2.0.0",
+    "pysrt>=1.1.2",
+    "subliminal==2.1.0",
+    "babelfish>=0.6.0",
+    "ffmpeg-python>=0.2.0",
+    "chardet>=5.0.0",
+    "tqdm>=4.65.0",
+    "requests>=2.31.0",
+    "guessit>=3.7.1",
+    "click>=8.0.0",
+    "pyyaml>=6.0.0",
+]
+
+[project.optional-dependencies]
+mlx = [
+    "mlx>=0.4.0",
+    "mlx-whisper>=0.4.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/samuelmukoti/censorbot"
+Documentation = "https://github.com/samuelmukoti/censorbot#readme"
+Repository = "https://github.com/samuelmukoti/censorbot"
+"Bug Reports" = "https://github.com/samuelmukoti/censorbot/issues"
+
+[project.scripts]
+censorbot = "censor:main"
+
+[tool.setuptools]
+py-modules = ["censor"]
+
+[tool.setuptools.package-data]
+"*" = ["badwords.txt"]
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--cov=censor --cov-report=html --cov-report=term-missing"
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false

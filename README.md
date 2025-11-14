@@ -1,5 +1,12 @@
 # CensorBot
 
+[![CI/CD](https://github.com/samuelmukoti/censorbot/actions/workflows/ci.yml/badge.svg)](https://github.com/samuelmukoti/censorbot/actions/workflows/ci.yml)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![PyPI version](https://img.shields.io/pypi/v/censorbot.svg)](https://pypi.org/project/censorbot/)
+[![Docker Pulls](https://img.shields.io/docker/pulls/samuelmukoti/censorbot.svg)](https://hub.docker.com/r/samuelmukoti/censorbot)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-donate-yellow.svg)](https://www.buymeacoffee.com/smukoti)
+
 A powerful Python-based tool for automatically censoring profanity in video files. CensorBot uses a multi-stage approach to detect and censor inappropriate language, combining embedded subtitles, online subtitle databases, and AI-powered transcription to ensure accurate profanity detection. Perfect for making your Blu-ray collection, streaming content, or personal video library family-friendly and suitable for all audiences.
 [!NOTE]
 ## Why Use CensorBot?
@@ -22,9 +29,6 @@ CensorBot is designed for users who want to make their video content family-frie
 5. **Review Output**: The output video will have censored audio, ready for safe viewing or sharing.
 
 See the Usage section below for more command examples and options.
-
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-donate-yellow.svg)](https://www.buymeacoffee.com/smukoti)
 
 ## Recent Updates (2024 Rewrite)
 
@@ -59,8 +63,17 @@ This project has been completely rewritten with significant improvements:
   - Apple Silicon: MLX framework with Metal and Neural Engine acceleration
   - Intel/AMD: Multi-threaded CPU processing with int8 quantization
 - Automatic fallback mechanism (MLX → faster-whisper CPU)
-- Progress tracking for transcription operations
+- Real-time progress tracking for transcription operations
 - Efficient memory management with temporary file cleanup
+
+### NEW in v2.0.0 🎉
+- **Dry-Run Mode**: Preview what will be censored before processing (`--dry-run`)
+- **Export Censored Subtitles**: Generate SRT files with profanity replaced (`--export-srt`)
+- **Word Statistics**: See detailed profanity reports before censoring (`--stats`)
+- **Custom Beep Sounds**: Use your own audio file for beep mode (`--beep-file`)
+- **Configuration Files**: Save settings in YAML for repeated use (`--config`)
+- **Progress Bars**: Visual feedback during long transcription operations
+- **Pip Installation**: Now available via `pip install censorbot`
 
 ## Prerequisites
 
@@ -75,6 +88,26 @@ This project has been completely rewritten with significant improvements:
 - NVIDIA Container Toolkit (for NVIDIA GPUs)
 
 ## Installation
+
+### Option 1: Pip Install (Recommended)
+
+```bash
+# Install from PyPI
+pip install censorbot
+
+# Install with Apple Silicon MLX support
+pip install censorbot[mlx]  # macOS ARM64 only
+
+# Run censorbot
+censorbot -i input.mp4 -o output.mp4
+```
+
+**Note**: Requires FFmpeg to be installed separately:
+- macOS: `brew install ffmpeg`
+- Ubuntu/Debian: `sudo apt-get install ffmpeg`
+- Windows: Download from [ffmpeg.org](https://ffmpeg.org/download.html)
+
+### Option 2: Docker (Isolated Environment)
 
 1. Clone the repository:
 ```bash
@@ -238,6 +271,88 @@ Expected transcription times (base model):
   - ✅ Applied 181 censorship segments
   - ✅ Output: Dual-audio MP4 (original + censored tracks)
   - ✅ Video quality preserved (no re-encoding)
+
+## Frequently Asked Questions (FAQ)
+
+### General Questions
+
+**Q: Why is transcription so slow?**
+A: AI transcription is computationally intensive. A 2-hour movie takes 35-45 minutes on CPU, 15-20 minutes with MLX (Apple Silicon), or 10-15 minutes with NVIDIA GPU. Use `--dry-run` to preview without full processing, or provide subtitle files with `-s` to skip transcription entirely.
+
+**Q: Can I use my own wordlist?**
+A: Yes! Use `-w custom_words.txt` with one word per line. The default list has 39 common profanities. Your custom list will be combined with the default unless you modify the code.
+
+**Q: How do I switch between original and censored audio?**
+A: By default, the output has two audio tracks. In VLC: Audio → Audio Track → Track 1 (original) or Track 2 (censored). Use `--single-audio` to keep only the censored track.
+
+**Q: Can I preview what will be censored without processing the whole video?**
+A: Yes! Use `--dry-run` to see timestamps and profane words that would be censored:
+```bash
+censorbot -i video.mp4 -o output.mp4 --dry-run --stats
+```
+
+**Q: Does this work on streaming content (Netflix, YouTube, etc.)?**
+A: No. CensorBot requires downloadable video files (MP4, MKV, AVI). Use screen recording tools first, then process the recording.
+
+### Technical Questions
+
+**Q: Do I need an NVIDIA GPU or Apple Silicon?**
+A: No. CensorBot works on any system with CPU-only mode (slower). GPU/MLX acceleration is optional for faster processing.
+
+**Q: Why did subtitle download fail?**
+A: This is expected for many videos. OpenSubtitles requires authentication, and providers may time out. CensorBot automatically falls back to AI transcription when subtitles aren't available.
+
+**Q: Can I use this in a script or automation?**
+A: Yes! Use configuration files for consistent settings:
+```yaml
+# config.yaml
+mode: mute
+model: base
+padding: 0.2
+stats: true
+```
+Then run: `censorbot --config config.yaml -i video.mp4 -o output.mp4`
+
+**Q: How accurate is the profanity detection?**
+A: Very accurate with subtitles (near 100%). With AI transcription, accuracy depends on audio quality and accents (typically 85-95% for clear English audio).
+
+**Q: Can I censor specific words only?**
+A: Yes. Create a custom wordlist with only the words you want censored and use `-w your_words.txt`.
+
+**Q: Will this work for languages other than English?**
+A: The current implementation is optimized for English. Whisper supports 90+ languages, but you'd need to provide language-specific wordlists.
+
+### Installation & Setup
+
+**Q: Do I need to install Docker?**
+A: Not anymore! Install via pip: `pip install censorbot`. Docker is optional for isolated environments.
+
+**Q: I get "FFmpeg not found" error**
+A: Install FFmpeg separately:
+- macOS: `brew install ffmpeg`
+- Ubuntu: `sudo apt-get install ffmpeg`
+- Windows: Download from ffmpeg.org
+
+**Q: How do I install on Apple Silicon (M1/M2/M3)?**
+A: ```bash
+pip install censorbot[mlx]
+```
+This includes MLX for Metal acceleration (5-10x faster than CPU).
+
+### Performance & Optimization
+
+**Q: Can I make it faster?**
+A:
+1. Provide subtitle files with `-s subtitles.srt` (skips transcription)
+2. Use smaller Whisper model: `--model-size tiny` (faster but less accurate)
+3. Use GPU/MLX acceleration if available
+4. Use `--dry-run` for testing without full processing
+
+**Q: How much disk space do I need?**
+A: Temporary files during processing require ~2x the input video size. Final output is similar to input size.
+
+**Q: Why is my output video file size different?**
+A: The video stream is copied (not re-encoded), but audio is re-encoded. Dual-audio outputs are ~5-10% larger. Use `--single-audio` for smaller files.
 
 ## License
 

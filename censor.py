@@ -380,7 +380,8 @@ class CensorBot:
                 )
 
                 word_timestamps = []
-                for segment in result.get('segments', []):
+                segments_list = list(result.get('segments', []))
+                for segment in tqdm(segments_list, desc="Transcribing", unit="segment"):
                     for word_info in segment.get('words', []):
                         word_timestamps.append((
                             word_info['start'],
@@ -409,7 +410,8 @@ class CensorBot:
                 )
 
                 word_timestamps = []
-                for segment in segments:
+                segments_list = list(segments)
+                for segment in tqdm(segments_list, desc="Transcribing", unit="segment"):
                     if hasattr(segment, 'words'):
                         for word in segment.words:
                             word_timestamps.append((
@@ -427,7 +429,8 @@ class CensorBot:
             )
 
             word_timestamps = []
-            for segment in segments:
+            segments_list = list(segments)
+            for segment in tqdm(segments_list, desc="Transcribing", unit="segment"):
                 if hasattr(segment, 'words'):
                     for word in segment.words:
                         word_timestamps.append((
@@ -468,11 +471,122 @@ class CensorBot:
         logger.info(f"✓ Found {len(censor_segments)} profane words to censor")
         return censor_segments
 
+    def export_censored_subtitles(self,
+                                 transcription: List[Tuple[float, float, str]],
+                                 badwords: List[str],
+                                 output_path: str) -> bool:
+        """Export subtitles with profane words replaced by [censored].
+
+        Args:
+            transcription: List of (start, end, word) tuples
+            badwords: List of words to censor
+            output_path: Path for output SRT file
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            badwords_set = set(word.lower() for word in badwords)
+            subs = pysrt.SubRipFile()
+
+            # Group words into subtitle segments (roughly 5-second chunks)
+            current_segment = []
+            segment_start = None
+            index = 1
+
+            for i, (start, end, word) in enumerate(transcription):
+                if not current_segment:
+                    segment_start = start
+
+                word_clean = word.strip().lower()
+                # Check if word should be censored
+                if word_clean in badwords_set or any(bad in word_clean for bad in badwords_set):
+                    current_segment.append('[censored]')
+                else:
+                    current_segment.append(word.strip())
+
+                # Create subtitle when segment reaches ~5 seconds or end of transcription
+                if (start - segment_start >= 5.0) or (i == len(transcription) - 1):
+                    if current_segment:
+                        # Convert timestamps to SubRipTime
+                        start_time = pysrt.SubRipTime(seconds=segment_start)
+                        end_time = pysrt.SubRipTime(seconds=end)
+
+                        # Create subtitle item
+                        sub = pysrt.SubRipItem(
+                            index=index,
+                            start=start_time,
+                            end=end_time,
+                            text=' '.join(current_segment)
+                        )
+                        subs.append(sub)
+                        index += 1
+
+                    # Reset for next segment
+                    current_segment = []
+                    segment_start = None
+
+            # Save to file
+            subs.save(output_path, encoding='utf-8')
+            logger.info(f"✓ Exported censored subtitles to {output_path}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to export censored subtitles: {e}")
+            return False
+
+    def print_statistics(self,
+                        censor_segments: List[Tuple[float, float]],
+                        transcription: List[Tuple[float, float, str]],
+                        badwords: List[str]) -> None:
+        """Print statistics about censored content.
+
+        Args:
+            censor_segments: List of (start, end) tuples for censored segments
+            transcription: List of (start, end, word) tuples from transcription
+            badwords: List of bad words to check against
+        """
+        badwords_set = set(word.lower() for word in badwords)
+        total_words = len(transcription)
+        profane_words = []
+
+        # Find all profane words
+        for start, end, word in transcription:
+            word_clean = word.strip().lower()
+            if word_clean in badwords_set or any(bad in word_clean for bad in badwords_set):
+                profane_words.append(word_clean)
+
+        # Calculate statistics
+        num_profane = len(profane_words)
+        percentage = (num_profane / total_words * 100) if total_words > 0 else 0
+
+        # Count word frequencies
+        from collections import Counter
+        word_counts = Counter(profane_words)
+        top_5 = word_counts.most_common(5)
+
+        # Print report
+        print("\n" + "=" * 60)
+        print("CENSORSHIP STATISTICS")
+        print("=" * 60)
+        print(f"Total words transcribed: {total_words}")
+        print(f"Profane words found: {num_profane}")
+        print(f"Profanity percentage: {percentage:.2f}%")
+        print(f"Segments to censor: {len(censor_segments)}")
+
+        if top_5:
+            print("\nTop 5 most frequent profane words:")
+            for i, (word, count) in enumerate(top_5, 1):
+                print(f"  {i}. '{word}': {count} occurrence(s)")
+
+        print("=" * 60 + "\n")
+
     def apply_censorship(self,
                         input_audio: str,
                         output_audio: str,
                         censor_segments: List[Tuple[float, float]],
-                        mode: str = 'mute') -> bool:
+                        mode: str = 'mute',
+                        beep_file: Optional[str] = None) -> bool:
         """Apply audio censorship using simplified FFmpeg filter chains.
 
         This is a complete rewrite that fixes all the batching/complexity issues.
@@ -483,6 +597,7 @@ class CensorBot:
             output_audio: Path for output audio file
             censor_segments: List of (start, end) tuples to censor
             mode: 'mute' (silence) or 'beep' (replace with beep)
+            beep_file: Optional custom beep sound file (for beep mode)
 
         Returns:
             True if successful, False otherwise
@@ -512,7 +627,7 @@ class CensorBot:
                 ]
 
             elif mode == 'beep':
-                # Beep mode: create continuous sine, enable at censor points, mix with muted
+                # Beep mode: create continuous sine or use custom beep, enable at censor points, mix with muted
                 duration = self.get_audio_duration(input_audio)
 
                 # Create volume enable expressions for beeps
@@ -527,21 +642,39 @@ class CensorBot:
                     for start, end in censor_segments
                 ])
 
-                # Build filter complex
-                filter_complex = (
-                    f"sine=frequency=1000:duration={duration}:sample_rate=16000[sine];"
-                    f"[sine]{beep_enables}[beep];"
-                    f"[0:a]{mute_filters}[muted];"
-                    f"[muted][beep]amix=inputs=2:duration=first[out]"
-                )
-
-                cmd = [
-                    "ffmpeg", "-y", "-loglevel", "error",
-                    "-i", input_audio,
-                    "-filter_complex", filter_complex,
-                    "-map", "[out]",
-                    output_audio
-                ]
+                # Build filter complex - use custom beep file or generate sine wave
+                if beep_file and os.path.exists(beep_file):
+                    logger.info(f"Using custom beep file: {beep_file}")
+                    # Use custom beep file - loop it to match duration
+                    filter_complex = (
+                        f"[1:a]aloop=loop=-1:size=2e+09,atrim=0:{duration}[beep_loop];"
+                        f"[beep_loop]{beep_enables}[beep];"
+                        f"[0:a]{mute_filters}[muted];"
+                        f"[muted][beep]amix=inputs=2:duration=first[out]"
+                    )
+                    cmd = [
+                        "ffmpeg", "-y", "-loglevel", "error",
+                        "-i", input_audio,
+                        "-i", beep_file,
+                        "-filter_complex", filter_complex,
+                        "-map", "[out]",
+                        output_audio
+                    ]
+                else:
+                    # Generate sine wave
+                    filter_complex = (
+                        f"sine=frequency=1000:duration={duration}:sample_rate=16000[sine];"
+                        f"[sine]{beep_enables}[beep];"
+                        f"[0:a]{mute_filters}[muted];"
+                        f"[muted][beep]amix=inputs=2:duration=first[out]"
+                    )
+                    cmd = [
+                        "ffmpeg", "-y", "-loglevel", "error",
+                        "-i", input_audio,
+                        "-filter_complex", filter_complex,
+                        "-map", "[out]",
+                        output_audio
+                    ]
 
             else:
                 raise ValueError(f"Invalid mode: {mode}. Must be 'mute' or 'beep'")
@@ -613,6 +746,28 @@ class CensorBot:
         except Exception as e:
             logger.error(f"Failed to merge audio and video: {e}")
             return False
+
+    def load_config(self, config_path: str) -> Dict:
+        """Load configuration from YAML file.
+
+        Args:
+            config_path: Path to YAML configuration file
+
+        Returns:
+            Dictionary of configuration values
+        """
+        try:
+            import yaml
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = yaml.safe_load(f)
+            logger.info(f"✓ Loaded configuration from {config_path}")
+            return config or {}
+        except ImportError:
+            logger.error("PyYAML not installed. Install with: pip install pyyaml")
+            return {}
+        except Exception as e:
+            logger.error(f"Failed to load config file: {e}")
+            return {}
 
     def embed_subtitles(self,
                        video_path: str,
@@ -687,7 +842,11 @@ def process_single_video(input_path: str,
                         censor_mode: str = "mute",
                         padding: float = 0.2,
                         dual_audio: bool = True,
-                        no_download_subs: bool = False) -> bool:
+                        no_download_subs: bool = False,
+                        dry_run: bool = False,
+                        export_srt: Optional[str] = None,
+                        beep_file: Optional[str] = None,
+                        show_stats: bool = False) -> bool:
     """Process a single video file with censoring.
 
     Args:
@@ -702,6 +861,10 @@ def process_single_video(input_path: str,
         padding: Padding in seconds around censored words
         dual_audio: Keep both original and censored audio tracks
         no_download_subs: Disable automatic subtitle downloading
+        dry_run: Preview censorship without creating output
+        export_srt: Export censored subtitles to this path
+        beep_file: Custom beep sound file for beep mode
+        show_stats: Display statistics about censored content
 
     Returns:
         True if successful, False otherwise
@@ -737,6 +900,7 @@ def process_single_video(input_path: str,
             # Get censor segments
             censor_segments = []
             censored_subtitle_path = None
+            transcription = []
 
             if subtitle_path:
                 logger.info("Using subtitle-based detection")
@@ -751,15 +915,53 @@ def process_single_video(input_path: str,
                 )
 
             if not censor_segments:
-                logger.warning("No profanity detected. Copying video as-is.")
+                logger.warning("No profanity detected.")
+                if dry_run:
+                    print("\nDRY RUN: No profanity detected in video.")
+                    return True
                 import shutil
                 shutil.copy2(input_path, output_path)
                 return True
 
+            # Show statistics if requested
+            if show_stats and transcription:
+                bot.print_statistics(censor_segments, transcription, badwords)
+
+            # Dry-run mode: show what would be censored and exit
+            if dry_run:
+                print("\n" + "=" * 60)
+                print("DRY RUN MODE - Preview of censorship")
+                print("=" * 60)
+                print(f"Total segments to censor: {len(censor_segments)}\n")
+
+                if transcription:
+                    # Show profane words with timestamps
+                    badwords_set = set(word.lower() for word in badwords)
+                    print("Profane words found:")
+                    for start, end, word in transcription:
+                        word_clean = word.strip().lower()
+                        if word_clean in badwords_set or any(bad in word_clean for bad in badwords_set):
+                            print(f"  [{start:.2f}s - {end:.2f}s] '{word}'")
+                else:
+                    # Show segments from subtitles
+                    print("Censor segments:")
+                    for i, (start, end) in enumerate(censor_segments, 1):
+                        print(f"  {i}. [{start:.2f}s - {end:.2f}s]")
+
+                print("\n" + "=" * 60)
+                print("No output file created (dry-run mode)")
+                print("=" * 60 + "\n")
+                return True
+
+            # Export censored subtitles if requested
+            if export_srt and transcription:
+                bot.export_censored_subtitles(transcription, badwords, export_srt)
+
             # Apply censorship to audio
             censored_audio_path = os.path.join(temp_dir, "censored_audio.wav")
             if not bot.apply_censorship(
-                audio_path, censored_audio_path, censor_segments, mode=censor_mode
+                audio_path, censored_audio_path, censor_segments,
+                mode=censor_mode, beep_file=beep_file
             ):
                 logger.error("Failed to apply audio censorship")
                 return False
@@ -816,13 +1018,28 @@ Examples:
 
   # Single audio track (censored only)
   %(prog)s -i input.mp4 -o output.mp4 --single-audio
+
+  # Dry-run mode (preview only)
+  %(prog)s -i input.mp4 -o output.mp4 --dry-run
+
+  # Export censored subtitles
+  %(prog)s -i input.mp4 -o output.mp4 --export-srt censored.srt
+
+  # Show statistics
+  %(prog)s -i input.mp4 -o output.mp4 --stats
+
+  # Use custom beep sound
+  %(prog)s -i input.mp4 -o output.mp4 --mode beep --beep-file custom_beep.wav
+
+  # Use config file
+  %(prog)s --config config.yaml
         """
     )
 
-    # Required arguments
-    parser.add_argument('-i', '--input', required=True,
+    # Required arguments (unless using config)
+    parser.add_argument('-i', '--input',
                        help='Input video file path')
-    parser.add_argument('-o', '--output', required=True,
+    parser.add_argument('-o', '--output',
                        help='Output video file path')
 
     # Optional arguments
@@ -847,26 +1064,90 @@ Examples:
     parser.add_argument('--force-cpu', action='store_true',
                        help='Force CPU-only processing (disable GPU)')
 
+    # New features
+    parser.add_argument('--dry-run', action='store_true',
+                       help='Preview censorship without creating output file')
+    parser.add_argument('--export-srt',
+                       help='Export censored subtitles to SRT file')
+    parser.add_argument('--beep-file',
+                       help='Custom beep sound file for beep mode (WAV format)')
+    parser.add_argument('--stats', action='store_true',
+                       help='Display statistics about censored content')
+    parser.add_argument('--config',
+                       help='Load configuration from YAML file')
+
     args = parser.parse_args()
 
+    # Load config file if provided
+    config = {}
+    if args.config:
+        if not os.path.exists(args.config):
+            logger.error(f"Config file not found: {args.config}")
+            sys.exit(1)
+        bot = CensorBot()  # Temporary instance just for loading config
+        config = bot.load_config(args.config)
+
+    # Merge config with command line args (CLI args take precedence)
+    def get_arg(name, default=None):
+        # Check CLI args first
+        cli_value = getattr(args, name, None)
+        if cli_value is not None and cli_value != default:
+            return cli_value
+        # Fall back to config file
+        return config.get(name, default)
+
+    # Get final values with config fallback
+    input_path = get_arg('input')
+    output_path = get_arg('output')
+    wordlist = get_arg('wordlist')
+    subtitles = get_arg('subtitles')
+    model_size = get_arg('model', 'base')
+    censor_mode = get_arg('mode', 'mute')
+    padding = get_arg('padding', 0.2)
+    single_audio = get_arg('single_audio', False)
+    no_download = get_arg('no_download', False)
+    use_gpu = get_arg('gpu', True)
+    force_cpu = get_arg('force_cpu', False)
+    dry_run = get_arg('dry_run', False)
+    export_srt = get_arg('export_srt')
+    beep_file = get_arg('beep_file')
+    show_stats = get_arg('stats', False)
+
+    # Validate required arguments
+    if not input_path:
+        logger.error("Input file path is required (use -i or --input)")
+        sys.exit(1)
+    if not output_path and not dry_run:
+        logger.error("Output file path is required (use -o or --output), unless using --dry-run")
+        sys.exit(1)
+
     # Validate input file exists
-    if not os.path.exists(args.input):
-        logger.error(f"Input file not found: {args.input}")
+    if not os.path.exists(input_path):
+        logger.error(f"Input file not found: {input_path}")
+        sys.exit(1)
+
+    # Validate beep file if provided
+    if beep_file and not os.path.exists(beep_file):
+        logger.error(f"Beep file not found: {beep_file}")
         sys.exit(1)
 
     # Process video
     success = process_single_video(
-        input_path=args.input,
-        output_path=args.output,
-        badwords_file=args.wordlist,
-        subtitles_file=args.subtitles,
-        model_size=args.model,
-        use_gpu=args.gpu,
-        force_cpu=args.force_cpu,
-        censor_mode=args.mode,
-        padding=args.padding,
-        dual_audio=not args.single_audio,
-        no_download_subs=args.no_download
+        input_path=input_path,
+        output_path=output_path or "dummy.mp4",  # Dummy output for dry-run
+        badwords_file=wordlist,
+        subtitles_file=subtitles,
+        model_size=model_size,
+        use_gpu=use_gpu,
+        force_cpu=force_cpu,
+        censor_mode=censor_mode,
+        padding=padding,
+        dual_audio=not single_audio,
+        no_download_subs=no_download,
+        dry_run=dry_run,
+        export_srt=export_srt,
+        beep_file=beep_file,
+        show_stats=show_stats
     )
 
     sys.exit(0 if success else 1)
