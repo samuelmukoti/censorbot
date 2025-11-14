@@ -52,11 +52,15 @@ temp_*
 *_censored*
 cachefile.dbm
 beep.wav
+movies/
+test_videos/
 
 # Logs
 *.log
 logs/
 log/
+*_log.txt
+censor_log.txt
 
 # Local development
 .env.local
