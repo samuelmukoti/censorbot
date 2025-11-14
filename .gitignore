@@ -19,9 +19,12 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+*.whl
 .pytest_cache/
 .coverage
 htmlcov/
+.tox/
+.mypy_cache/
 
 cachefile.*
 

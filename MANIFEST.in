@@ -1,0 +1,8 @@
+include README.md
+include LICENSE
+include CLAUDE.md
+include badwords.txt
+include requirements.txt
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * .DS_Store
