@@ -8,6 +8,18 @@
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-donate-yellow.svg)](https://www.buymeacoffee.com/smukoti)
 
 A powerful Python-based tool for automatically censoring profanity in video files. CensorBot uses a multi-stage approach to detect and censor inappropriate language, combining embedded subtitles, online subtitle databases, and AI-powered transcription to ensure accurate profanity detection. Perfect for making your Blu-ray collection, streaming content, or personal video library family-friendly and suitable for all audiences.
+
+## ⚠️ Legal Disclaimer
+
+**CensorBot is intended for personal, educational, and lawful use only.**
+
+- **Media Ownership Required**: You must legally own or have proper authorization to use any media processed with this tool. CensorBot is designed for personal media libraries, legally purchased content, and authorized educational materials.
+- **No Endorsement of Piracy**: This project and its author(s) **do not endorse, promote, or support piracy** or copyright infringement in any form.
+- **User Responsibility**: Users are solely responsible for ensuring they have the legal right to modify and use any media files processed with CensorBot. This includes compliance with copyright laws, terms of service, and licensing agreements.
+- **No Warranty**: This software is provided "as is" without warranty of any kind. The author(s) are not liable for any misuse, legal consequences, or damages arising from the use of this tool.
+
+By using CensorBot, you acknowledge that you understand and agree to these terms, and that you will use the software responsibly and in accordance with applicable laws.
+
 [!NOTE]
 ## Why Use CensorBot?
 CensorBot is designed for users who want to make their video content family-friendly, educational, or suitable for public viewing by automatically removing or masking profane language. Here are some common scenarios:
