@@ -110,17 +110,11 @@ pip install censorbot
 # Or use pipx for isolated installation
 pipx install censorbot
 
-# For Apple Silicon with Metal acceleration (recommended for M1/M2/M3 Macs)
-pip install 'censorbot[mlx]'
-# or
-pipx install 'censorbot[mlx]'
-
 # Run censorbot
 censorbot -i input.mp4 -o output.mp4
 
 # Or run without installing (pipx only)
 pipx run censorbot -i input.mp4 -o output.mp4
-pipx run --spec 'censorbot[mlx]' censorbot -i input.mp4 -o output.mp4  # With MLX on Apple Silicon
 ```
 
 **System Requirements**:
@@ -130,10 +124,10 @@ pipx run --spec 'censorbot[mlx]' censorbot -i input.mp4 -o output.mp4  # With ML
   - Windows: Download from [ffmpeg.org](https://ffmpeg.org/download.html)
 - **Python 3.8+** (usually pre-installed on macOS/Linux)
 
-**Hardware Acceleration**:
-- CPU-only: Works automatically (default, included with torch)
-- NVIDIA GPU: CUDA acceleration automatic if CUDA toolkit installed
-- Apple Silicon: Install with `[mlx]` extras for Metal acceleration
+**Hardware Acceleration** (automatic detection):
+- **Apple Silicon (M1/M2/M3)**: Metal/Neural Engine acceleration via MLX (auto-installed)
+- **NVIDIA GPU**: CUDA acceleration (requires CUDA toolkit)
+- **CPU**: Multi-threaded processing (works everywhere)
 
 ### Option 2: Docker (Isolated Environment)
 

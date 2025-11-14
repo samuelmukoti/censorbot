@@ -9,7 +9,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="censorbot",
-    version="0.0.6",
+    version="0.0.7",
     author="Samuel Mukoti",
     author_email="contact@samuelmukoti.com",
     description="Automatically censor profanity in video files using AI transcription",
@@ -52,6 +52,9 @@ setup(
         "guessit>=3.7.1",
         "click>=8.0.0",
         "pyyaml>=6.0.0",
+        # Auto-install MLX for Metal acceleration on Apple Silicon
+        "mlx>=0.4.0; platform_system=='Darwin' and platform_machine=='arm64'",
+        "mlx-whisper>=0.4.0; platform_system=='Darwin' and platform_machine=='arm64'",
     ],
     extras_require={
         "mlx": [
