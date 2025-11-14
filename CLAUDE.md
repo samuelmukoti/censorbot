@@ -114,6 +114,9 @@ Two censoring approaches using simplified FFmpeg filter chains:
 - Dual audio tracks by default (original + censored)
 - Use `--single-audio` to keep only censored track
 - Video stream copied (no re-encoding)
+- **Volume Normalization**: Censored track boosted by 4dB to match original levels
+- **Audio Metadata**: Language tags set to "eng", censored track set as default
+- **Container Format**: Maintains original format (MP4→MP4, MKV→MKV)
 
 ## Key Implementation Details
 

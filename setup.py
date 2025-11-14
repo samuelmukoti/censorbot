@@ -9,7 +9,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="censorbot",
-    version="0.0.4",
+    version="0.0.5",
     author="Samuel Mukoti",
     author_email="contact@samuelmukoti.com",
     description="Automatically censor profanity in video files using AI transcription",

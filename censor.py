@@ -717,20 +717,32 @@ class CensorBot:
                 cmd.extend([
                     "-map", "0:v",  # Video from original
                     "-map", "0:a",  # Original audio
-                    "-map", "1:a",  # Censored audio
+                    "-map", "1:a",  # Censored audio (volume-matched)
                     "-c:v", "copy",  # Copy video (no re-encode)
                     "-c:a:0", "aac", "-b:a:0", "192k",  # Original audio track
                     "-c:a:1", "aac", "-b:a:1", "192k",  # Censored audio track
-                    "-metadata:s:a:0", "title=Original Audio",
-                    "-metadata:s:a:1", "title=Censored Audio"
+                    # Add audio filter to normalize censored track volume
+                    "-filter:a:1", "volume=4dB",  # Boost censored track to match original
+                    # Set track titles for player display
+                    "-metadata:s:a:0", "title=Original",
+                    "-metadata:s:a:0", "language=eng",
+                    "-metadata:s:a:1", "title=Censored",
+                    "-metadata:s:a:1", "language=eng",
+                    # Set default track to censored
+                    "-disposition:a:0", "0",
+                    "-disposition:a:1", "default"
                 ])
             else:
-                # Only use censored audio
+                # Only use censored audio (volume-matched)
                 cmd.extend([
                     "-map", "0:v",  # Video from original
                     "-map", "1:a",  # Censored audio only
                     "-c:v", "copy",  # Copy video (no re-encode)
-                    "-c:a", "aac", "-b:a", "192k"
+                    "-c:a", "aac", "-b:a", "192k",
+                    # Add volume boost to match original levels
+                    "-filter:a", "volume=4dB",
+                    "-metadata:s:a:0", "title=Censored",
+                    "-metadata:s:a:0", "language=eng"
                 ])
 
             cmd.append(output_path)
