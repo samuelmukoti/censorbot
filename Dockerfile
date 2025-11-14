@@ -107,7 +107,7 @@ RUN mkdir -p /root/.cache/subliminal
 # Install base requirements (lightweight, platform-agnostic)
 RUN pip3 install --no-cache-dir \
     faster-whisper>=1.0.0 \
-    numpy>=1.24.0,<2.0.0 \
+    "numpy>=1.24.0,<2.0.0" \
     pysrt>=1.1.2 \
     subliminal==2.1.0 \
     babelfish>=0.6.0 \
