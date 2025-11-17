@@ -375,7 +375,7 @@ class CensorBot:
                 # Use MLX backend for Apple Silicon
                 result = mlx_whisper.transcribe(
                     audio_path,
-                    path_or_hf_repo=f"mlx-community/whisper-{self.model_size}",
+                    path_or_hf_repo="mlx-community/whisper-large-v3-mlx",
                     word_timestamps=True
                 )
 
