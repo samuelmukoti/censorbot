@@ -52,6 +52,7 @@ jobs:
           context: .
           platforms: ${{ matrix.platform }}
           push: false
+          load: true
           tags: censorbot:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
