@@ -46,7 +46,8 @@ Dockerfile
 .dockerignore
 
 # Documentation
-README.md
 LICENSE
 *.md
+# pyproject.toml declares README.md as the package readme
+!README.md
 docs/ 
