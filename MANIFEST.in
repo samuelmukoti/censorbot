@@ -2,6 +2,7 @@ include README.md
 include LICENSE
 include CLAUDE.md
 include badwords.txt
+include censor.py
 include requirements.txt
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]

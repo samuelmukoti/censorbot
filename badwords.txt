@@ -1,6 +1,10 @@
-fuck
-shit
-damn
-hell
-ass
-bitch 
+# Extra words for CensorBot (-w badwords.txt). The built-in list already
+# covers the common profanity; add your own here.
+#
+#   word        the word and its plural
+#   frick*      a glob: fricking, fricked, ...
+#   two words   a phrase
+#   !word       never censor this word
+#
+# Example: also censor "Jesus Christ" used as an exclamation
+# jesus christ

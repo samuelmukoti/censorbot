@@ -89,3 +89,5 @@ censor_log.txt
 .Trashes
 ehthumbs.db
 Thumbs.db 
+# Local model cache
+.cache/

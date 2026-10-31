@@ -26,10 +26,10 @@ jobs:
           pip install flake8 black
 
       - name: Run flake8
-        run: flake8 censor.py --max-line-length=120 --extend-ignore=E203,W503
+        run: flake8 censorbot censor.py tests --max-line-length=120 --extend-ignore=E203,W503
 
       - name: Check code formatting with black
-        run: black --check --line-length=100 censor.py
+        run: black --check censorbot censor.py tests
 
   test-docker:
     name: Test Docker Build
